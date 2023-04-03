@@ -1,7 +1,7 @@
 use std::fmt;
 use std::mem;
 use std::ptr;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use super::destructor::{self, Destructor};
 use ffi::*;
@@ -10,16 +10,19 @@ use {media, Chapter, ChapterMut, DictionaryRef, Stream, StreamMut};
 
 pub struct Context {
     ptr: *mut AVFormatContext,
-    dtor: Rc<Destructor>,
+    dtor: Arc<Destructor>,
 }
 
 unsafe impl Send for Context {}
+
+// TODO(tslnc04): verify that this is actually correct
+unsafe impl Sync for Context {}
 
 impl Context {
     pub unsafe fn wrap(ptr: *mut AVFormatContext, mode: destructor::Mode) -> Self {
         Context {
             ptr,
-            dtor: Rc::new(Destructor::new(ptr, mode)),
+            dtor: Arc::new(Destructor::new(ptr, mode)),
         }
     }
 
@@ -31,8 +34,8 @@ impl Context {
         self.ptr
     }
 
-    pub unsafe fn destructor(&self) -> Rc<Destructor> {
-        Rc::clone(&self.dtor)
+    pub unsafe fn destructor(&self) -> Arc<Destructor> {
+        Arc::clone(&self.dtor)
     }
 }
 

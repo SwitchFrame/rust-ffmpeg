@@ -86,6 +86,20 @@ impl Output {
         }
     }
 
+    pub fn add_stream_without_codec(&mut self) -> Result<StreamMut, Error> {
+        unsafe {
+            let ptr = avformat_new_stream(self.as_mut_ptr(), ptr::null());
+
+            if ptr.is_null() {
+                return Err(Error::Unknown);
+            }
+
+            let index = (*self.ctx.as_ptr()).nb_streams - 1;
+
+            Ok(StreamMut::wrap(&mut self.ctx, index as usize))
+        }
+    }
+
     pub fn add_chapter<R: Into<Rational>, S: AsRef<str>>(
         &mut self,
         id: i64,

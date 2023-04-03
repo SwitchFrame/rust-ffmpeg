@@ -6,6 +6,8 @@ pub enum Mode {
     Output,
 }
 
+unsafe impl Send for Destructor {}
+
 pub struct Destructor {
     ptr: *mut AVFormatContext,
     mode: Mode,

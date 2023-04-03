@@ -1,5 +1,5 @@
 use std::any::Any;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use super::{Context, Id};
 use ffi::*;
@@ -7,13 +7,13 @@ use media;
 
 pub struct Parameters {
     ptr: *mut AVCodecParameters,
-    owner: Option<Rc<dyn Any>>,
+    owner: Option<Arc<dyn Any>>,
 }
 
 unsafe impl Send for Parameters {}
 
 impl Parameters {
-    pub unsafe fn wrap(ptr: *mut AVCodecParameters, owner: Option<Rc<dyn Any>>) -> Self {
+    pub unsafe fn wrap(ptr: *mut AVCodecParameters, owner: Option<Arc<dyn Any>>) -> Self {
         Parameters { ptr, owner }
     }
 
