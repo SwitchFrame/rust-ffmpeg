@@ -2,9 +2,12 @@ use std::ffi::CString;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 
+use crate::format::format::SeekFlags;
+
 use super::common::Context;
 use super::destructor;
 use ffi::*;
+use libc::c_int;
 use util::range::Range;
 #[cfg(not(feature = "ffmpeg_5_0"))]
 use Codec;
@@ -111,6 +114,26 @@ impl Input {
     pub fn play(&mut self) -> Result<(), Error> {
         unsafe {
             match av_read_play(self.as_mut_ptr()) {
+                0 => Ok(()),
+                e => Err(Error::from(e)),
+            }
+        }
+    }
+
+    #[inline]
+    pub fn seek_frame(
+        &mut self,
+        stream_index: usize,
+        timestamp: i64,
+        flags: SeekFlags,
+    ) -> Result<(), Error> {
+        unsafe {
+            match av_seek_frame(
+                self.as_mut_ptr(),
+                stream_index as c_int,
+                timestamp,
+                flags.bits(),
+            ) {
                 0 => Ok(()),
                 e => Err(Error::from(e)),
             }

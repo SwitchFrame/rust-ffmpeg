@@ -1,9 +1,10 @@
 use std::any::Any;
 use std::sync::Arc;
 
-use super::{Context, Id};
+use super::Context;
 use ffi::*;
-use media;
+use libc::c_int;
+use {codec, format, media};
 
 pub struct Parameters {
     ptr: *mut AVCodecParameters,
@@ -36,12 +37,98 @@ impl Parameters {
         }
     }
 
+    #[deprecated(since = "5.1.1", note = "Use codec_type instead")]
     pub fn medium(&self) -> media::Type {
         unsafe { media::Type::from((*self.as_ptr()).codec_type) }
     }
 
-    pub fn id(&self) -> Id {
-        unsafe { Id::from((*self.as_ptr()).codec_id) }
+    #[deprecated(since = "5.1.1", note = "Use codec_id instead")]
+    pub fn id(&self) -> codec::Id {
+        unsafe { codec::Id::from((*self.as_ptr()).codec_id) }
+    }
+
+    #[inline]
+    pub fn width(&self) -> u32 {
+        unsafe { (*self.as_ptr()).width as u32 }
+    }
+
+    #[inline]
+    pub fn set_width(&mut self, value: u32) {
+        unsafe {
+            (*self.as_mut_ptr()).width = value as c_int;
+        }
+    }
+
+    #[inline]
+    pub fn height(&self) -> u32 {
+        unsafe { (*self.as_ptr()).height as u32 }
+    }
+
+    #[inline]
+    pub fn set_height(&mut self, value: u32) {
+        unsafe {
+            (*self.as_mut_ptr()).height = value as c_int;
+        }
+    }
+
+    #[inline]
+    pub fn format(&self) -> codec::AVPixelFormat {
+        unsafe { std::mem::transmute::<_, AVPixelFormat>((*self.as_ptr()).format) }
+    }
+
+    #[inline]
+    pub fn set_format(&mut self, format: format::Pixel) {
+        let format: codec::AVPixelFormat = format.into();
+        unsafe {
+            (*self.as_mut_ptr()).format = format as c_int;
+        }
+    }
+
+    #[inline]
+    pub fn codec_type(&self) -> media::Type {
+        unsafe { (*self.as_ptr()).codec_type.into() }
+    }
+
+    #[inline]
+    pub fn set_codec_type(&mut self, codec_type: media::Type) {
+        unsafe {
+            (*self.as_mut_ptr()).codec_type = codec_type.into();
+        }
+    }
+
+    #[inline]
+    pub fn codec_id(&self) -> codec::Id {
+        unsafe { (*self.as_ptr()).codec_id.into() }
+    }
+
+    #[inline]
+    pub fn set_codec_id(&mut self, codec_id: codec::Id) {
+        unsafe {
+            (*self.as_mut_ptr()).codec_id = codec_id.into();
+        }
+    }
+
+    #[inline]
+    pub fn extradata(&mut self) -> &[u8] {
+        let extradata_size = unsafe { (*self.as_ptr()).extradata_size } as usize;
+        unsafe { std::slice::from_raw_parts((*self.as_ptr()).extradata, extradata_size) }
+    }
+
+    #[inline]
+    pub fn set_extradata(&mut self, mut extradata: Vec<u8>) {
+        unsafe {
+            (*self.as_mut_ptr()).extradata_size = extradata.len() as libc::c_int;
+        }
+        extradata.extend(vec![0; AV_INPUT_BUFFER_PADDING_SIZE as usize]);
+        let mut slice = extradata.into_boxed_slice();
+        let ptr = slice.as_mut_ptr();
+
+        // Leave the memory untracked so it can be freed when the parameters are
+        // dropped through the avcodec_parameters_free call.
+        std::mem::forget(slice);
+        unsafe {
+            (*self.as_mut_ptr()).extradata = ptr;
+        }
     }
 }
 

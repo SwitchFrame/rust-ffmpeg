@@ -1,7 +1,10 @@
 use super::Context;
 use ffi::*;
 use libc::c_int;
-use {Error, Frame};
+use {
+    util::format::{Pixel, Sample},
+    ChannelLayout, Error, Frame, Rational,
+};
 
 pub struct Sink<'a> {
     ctx: &'a mut Context<'a>,
