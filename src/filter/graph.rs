@@ -130,6 +130,15 @@ impl Graph {
         }
     }
 
+    pub fn request_oldest(&mut self) -> Result<(), Error> {
+        unsafe {
+            match avfilter_graph_request_oldest(self.as_mut_ptr()) {
+                0 => Ok(()),
+                e => Err(Error::from(e)),
+            }
+        }
+    }
+
     pub fn input(&mut self, name: &str, pad: usize) -> Result<Parser, Error> {
         Parser::new(self).input(name, pad)
     }

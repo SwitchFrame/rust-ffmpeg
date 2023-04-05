@@ -66,7 +66,6 @@ impl<'a> Sink<'a> {
         unsafe { av_buffersink_get_channels(self.ctx.as_ptr()) }
     }
 
-    // TODO(tslnc04): figure out how to convert this to the ffmpeg_rs type
     pub fn channel_layout(&self) -> ChannelLayout {
         unsafe {
             ChannelLayout::from_bits_truncate(av_buffersink_get_channel_layout(self.ctx.as_ptr()))
