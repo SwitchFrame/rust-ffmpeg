@@ -83,6 +83,19 @@ impl<'a> Sink<'a> {
         }
     }
 
+    pub fn frame_flags(&mut self, frame: &mut Frame, flags: Flags) -> Result<(), Error> {
+        unsafe {
+            match av_buffersink_get_frame_flags(
+                self.ctx.as_mut_ptr(),
+                frame.as_mut_ptr(),
+                flags.bits(),
+            ) {
+                n if n >= 0 => Ok(()),
+                e => Err(Error::from(e)),
+            }
+        }
+    }
+
     pub fn samples(&mut self, frame: &mut Frame, samples: usize) -> Result<(), Error> {
         unsafe {
             match av_buffersink_get_samples(
@@ -100,5 +113,12 @@ impl<'a> Sink<'a> {
         unsafe {
             av_buffersink_set_frame_size(self.ctx.as_mut_ptr(), value);
         }
+    }
+}
+
+bitflags! {
+    pub struct Flags: c_int {
+        const PEEK = AV_BUFFERSINK_FLAG_PEEK;
+        const NO_REQUEST = AV_BUFFERSINK_FLAG_NO_REQUEST;
     }
 }
