@@ -2,6 +2,7 @@ use std::ptr;
 
 use super::Context;
 use ffi::*;
+use libc::c_int;
 use {Error, Frame};
 
 pub struct Source<'a> {
@@ -27,6 +28,18 @@ impl<'a> Source<'a> {
             }
         }
     }
+    pub fn add_flags(&mut self, frame: &Frame, flags: Flags) -> Result<(), Error> {
+        unsafe {
+            match av_buffersrc_add_frame_flags(
+                self.ctx.as_mut_ptr(),
+                frame.as_ptr() as *mut _,
+                flags.bits(),
+            ) {
+                0 => Ok(()),
+                e => Err(Error::from(e)),
+            }
+        }
+    }
 
     pub fn flush(&mut self) -> Result<(), Error> {
         unsafe { self.add(&Frame::wrap(ptr::null_mut())) }
@@ -39,5 +52,15 @@ impl<'a> Source<'a> {
                 e => Err(Error::from(e)),
             }
         }
+    }
+}
+
+bitflags! {
+    // No clue why these have to be cast to c_int but the buffersink ones don't.
+    // Probably should figure it out but oh well
+    pub struct Flags: c_int {
+        const NO_CHECK_FORMAT = AV_BUFFERSRC_FLAG_NO_CHECK_FORMAT as c_int;
+        const PUSH = AV_BUFFERSRC_FLAG_PUSH as c_int;
+        const KEEP_REF = AV_BUFFERSRC_FLAG_KEEP_REF as c_int;
     }
 }
