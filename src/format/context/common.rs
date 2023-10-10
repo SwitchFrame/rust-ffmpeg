@@ -15,9 +15,6 @@ pub struct Context {
 
 unsafe impl Send for Context {}
 
-// TODO(tslnc04): verify that this is actually correct
-unsafe impl Sync for Context {}
-
 impl Context {
     pub unsafe fn wrap(ptr: *mut AVFormatContext, mode: destructor::Mode) -> Self {
         Context {
