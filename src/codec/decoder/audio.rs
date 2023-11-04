@@ -5,6 +5,8 @@ use ffi::*;
 #[cfg(not(feature = "ffmpeg_5_0"))]
 use libc::c_int;
 
+use crate::channel_layout::NewChannelLayout;
+
 use super::Opened;
 use codec::Context;
 #[cfg(not(feature = "ffmpeg_5_0"))]
@@ -71,6 +73,10 @@ impl Audio {
 
     pub fn channel_layout(&self) -> ChannelLayout {
         unsafe { ChannelLayout::from_bits_truncate((*self.as_ptr()).channel_layout) }
+    }
+
+    pub fn ch_layout(&self) -> NewChannelLayout {
+        unsafe { NewChannelLayout::from((*self.as_ptr()).ch_layout) }
     }
 
     pub fn set_channel_layout(&mut self, value: ChannelLayout) {
