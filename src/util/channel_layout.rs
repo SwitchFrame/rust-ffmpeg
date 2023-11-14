@@ -1,6 +1,57 @@
 use ffi::*;
 use libc::c_ulonglong;
 
+pub struct NewChannelLayout(AVChannelLayout);
+
+impl NewChannelLayout {
+    pub unsafe fn as_ptr(&self) -> *const AVChannelLayout {
+        &self.0
+    }
+
+    pub fn order(&self) -> ChannelOrder {
+        unsafe { (*self.as_ptr()).order.into() }
+    }
+
+    pub fn channels(&self) -> i32 {
+        unsafe { (*self.as_ptr()).nb_channels }
+    }
+}
+
+impl From<AVChannelLayout> for NewChannelLayout {
+    fn from(value: AVChannelLayout) -> Self {
+        NewChannelLayout(value)
+    }
+}
+
+pub enum ChannelOrder {
+    Unspecified,
+    Native,
+    Custom,
+    Ambisonic,
+}
+
+impl From<AVChannelOrder> for ChannelOrder {
+    fn from(value: AVChannelOrder) -> Self {
+        match value {
+            AVChannelOrder::AV_CHANNEL_ORDER_UNSPEC => ChannelOrder::Unspecified,
+            AVChannelOrder::AV_CHANNEL_ORDER_NATIVE => ChannelOrder::Native,
+            AVChannelOrder::AV_CHANNEL_ORDER_CUSTOM => ChannelOrder::Custom,
+            AVChannelOrder::AV_CHANNEL_ORDER_AMBISONIC => ChannelOrder::Ambisonic,
+        }
+    }
+}
+
+impl From<ChannelOrder> for AVChannelOrder {
+    fn from(value: ChannelOrder) -> AVChannelOrder {
+        match value {
+            ChannelOrder::Unspecified => AVChannelOrder::AV_CHANNEL_ORDER_UNSPEC,
+            ChannelOrder::Native => AVChannelOrder::AV_CHANNEL_ORDER_NATIVE,
+            ChannelOrder::Custom => AVChannelOrder::AV_CHANNEL_ORDER_CUSTOM,
+            ChannelOrder::Ambisonic => AVChannelOrder::AV_CHANNEL_ORDER_AMBISONIC,
+        }
+    }
+}
+
 bitflags! {
     pub struct ChannelLayout: c_ulonglong {
         const FRONT_LEFT            = AV_CH_FRONT_LEFT;
