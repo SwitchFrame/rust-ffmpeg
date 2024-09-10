@@ -1,3 +1,5 @@
+use std::ffi::CString;
+
 use ffi::*;
 
 #[repr(transparent)]
@@ -100,6 +102,21 @@ impl ChannelLayout {
     // AV_CH_UNUSED
     pub fn is_empty(&self) -> bool {
         self.0.order == AVChannelOrder::AV_CHANNEL_ORDER_UNSPEC
+    }
+
+    pub fn describe(&self) -> String {
+        let mut buf = [0i8; 64];
+
+        unsafe {
+            av_channel_layout_describe(
+                &self.0 as *const AVChannelLayout,
+                buf.as_mut_ptr(),
+                buf.len(),
+            );
+        };
+
+        let cstring = unsafe { CString::from_raw(buf.as_mut_ptr()) };
+        cstring.to_string_lossy().into_owned()
     }
 }
 
