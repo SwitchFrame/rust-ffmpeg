@@ -119,6 +119,7 @@ impl<'a> Sink<'a> {
 }
 
 bitflags! {
+    #[derive(Clone, Copy)]
     pub struct Flags: c_int {
         const PEEK = AV_BUFFERSINK_FLAG_PEEK;
         const NO_REQUEST = AV_BUFFERSINK_FLAG_NO_REQUEST;
