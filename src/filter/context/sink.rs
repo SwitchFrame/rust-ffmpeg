@@ -7,12 +7,12 @@ use {
 };
 
 pub struct Sink<'a> {
-    ctx: &'a mut Context<'a>,
+    ctx: &'a mut Context,
 }
 
 impl<'a> Sink<'a> {
-    pub unsafe fn wrap<'b>(ctx: &'b mut Context<'b>) -> Sink<'b> {
-        Sink { ctx }
+    pub unsafe fn wrap(ctx: &'a mut Context) -> Self {
+        Self { ctx }
     }
 
     pub fn width(&self) -> u32 {
@@ -21,10 +21,6 @@ impl<'a> Sink<'a> {
 
     pub fn height(&self) -> u32 {
         unsafe { av_buffersink_get_h(self.ctx.as_ptr()) as u32 }
-    }
-
-    pub fn time_base(&self) -> Rational {
-        unsafe { Rational::from(av_buffersink_get_time_base(self.ctx.as_ptr())) }
     }
 
     pub fn frame_rate(&self) -> Rational {
@@ -68,7 +64,9 @@ impl<'a> Sink<'a> {
 
     pub fn channel_layout(&self) -> ChannelLayout {
         unsafe {
-            ChannelLayout::from_bits_truncate(av_buffersink_get_channel_layout(self.ctx.as_ptr()))
+            let mut channel_layout: AVChannelLayout = std::mem::zeroed();
+            av_buffersink_get_ch_layout(self.ctx.as_ptr(), (&mut channel_layout) as *mut _);
+            channel_layout.into()
         }
     }
 }
@@ -113,6 +111,10 @@ impl<'a> Sink<'a> {
         unsafe {
             av_buffersink_set_frame_size(self.ctx.as_mut_ptr(), value);
         }
+    }
+
+    pub fn time_base(&self) -> Rational {
+        unsafe { av_buffersink_get_time_base(self.ctx.as_ptr()) }.into()
     }
 }
 

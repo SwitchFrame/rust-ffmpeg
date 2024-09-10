@@ -9,7 +9,7 @@ use super::common::Context;
 use super::destructor;
 use codec::traits;
 use ffi::*;
-use {format, ChapterMut, Dictionary, Error, Rational, StreamMut};
+use {codec, format, ChapterMut, Dictionary, Error, Rational, StreamMut};
 
 pub struct Output {
     ptr: *mut AVFormatContext,
@@ -90,12 +90,17 @@ impl Output {
         }
     }
 
-    pub fn add_stream_without_codec(&mut self) -> Result<StreamMut, Error> {
+    pub fn add_stream_with(&mut self, context: &codec::Context) -> Result<StreamMut, Error> {
         unsafe {
             let ptr = avformat_new_stream(self.as_mut_ptr(), ptr::null());
 
             if ptr.is_null() {
                 return Err(Error::Unknown);
+            }
+
+            match avcodec_parameters_from_context((*ptr).codecpar, context.as_ptr()) {
+                0 => (),
+                e => return Err(Error::from(e)),
             }
 
             let index = (*self.ctx.as_ptr()).nb_streams - 1;
